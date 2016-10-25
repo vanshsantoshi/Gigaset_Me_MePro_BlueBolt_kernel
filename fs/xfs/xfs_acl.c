@@ -397,6 +397,7 @@ xfs_xattr_acl_set(struct dentry *dentry, const char *name,
 		if (error)
 			goto out_release;
 
+
 		error = xfs_set_mode(inode, mode);
 		if (error)
 			goto out_release;
