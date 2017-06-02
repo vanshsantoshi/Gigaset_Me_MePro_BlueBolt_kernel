@@ -30,6 +30,19 @@
 #include <linux/tick.h>
 #include <trace/events/power.h>
 
+
+// the hard limits are not per core but per cpu cluster
+static unsigned int min_freq_hardlimit[8] = {0, 0};
+static unsigned int max_freq_hardlimit[8] = {0, 0};
+
+#define GOVERNOR_NAME_MAX	16
+static char governor_hard[2][GOVERNOR_NAME_MAX];
+
+#define CONFIG_MSM_CPU_FREQ_MIN_GROUP1 302400
+#define CONFIG_MSM_CPU_FREQ_MAX_GROUP1 1555200
+#define CONFIG_MSM_CPU_FREQ_MIN_GROUP2 302400
+#define CONFIG_MSM_CPU_FREQ_MAX_GROUP2 1766400
+
 /**
  * The "cpufreq driver" - the arch- or hardware-dependent low
  * level driver of CPUFreq support, and its spinlock. This lock
@@ -2264,6 +2277,16 @@ int cpufreq_register_driver(struct cpufreq_driver *driver_data)
 	}
 
 	pr_debug("driver %s up and running\n", driver_data->name);
+
+	// Initialize min and max scaling freq hard limits
+	min_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MIN_GROUP1;
+	max_freq_hardlimit[0] = CONFIG_MSM_CPU_FREQ_MAX_GROUP1;
+	min_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MIN_GROUP2;
+	max_freq_hardlimit[1] = CONFIG_MSM_CPU_FREQ_MAX_GROUP2;
+
+	// Initialize governor hard limits
+	sprintf(governor_hard[0], "%s", "");
+	sprintf(governor_hard[1], "%s", "");
 
 	return 0;
 err_if_unreg:
