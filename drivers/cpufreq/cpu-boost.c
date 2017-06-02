@@ -25,6 +25,16 @@
 #include <linux/slab.h>
 #include <linux/input.h>
 #include <linux/time.h>
+#include "../../kernel/sched/sched.h"
+
+#ifdef CONFIG_TOUCHBOOST_CONTROL
+#include <linux/export.h>
+unsigned int touchboost_status_1 = 0;
+unsigned int touchboost_freq_1 = 1344000;
+unsigned int touchboost_status_2 = 0;
+unsigned int touchboost_freq_2 = 1344000;
+unsigned int touchboost_ms = 0;
+#endif
 
 struct cpu_sync {
 	struct task_struct *thread;
