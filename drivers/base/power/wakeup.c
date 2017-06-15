@@ -795,7 +795,7 @@ void print_active_wakeup_sources(void)
 	struct wakeup_source *ws;
 	int active = 0;
 	struct wakeup_source *last_activity_ws = NULL;
-
+	if (is_display_on())
 		return;
 
 	rcu_read_lock();
