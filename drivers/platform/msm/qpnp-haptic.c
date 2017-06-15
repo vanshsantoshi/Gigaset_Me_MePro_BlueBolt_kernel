@@ -286,6 +286,7 @@ struct qpnp_hap {
 	struct mutex lock;
 	struct mutex wf_lock;
 	struct mutex set_lock;
+	struct workqueue_struct *wq;
 	spinlock_t td_lock;
 	struct work_struct td_work;
 	struct completion completion;
@@ -316,6 +317,7 @@ struct qpnp_hap {
 	u8 reg_play;
 	u8 lra_res_cal_period;
 	u8 ext_pwm_dtest_line;
+
 	bool state;
 	bool use_play_irq;
 	bool use_sc_irq;
@@ -1676,12 +1678,24 @@ static void qpnp_hap_td_enable(struct timed_output_dev *dev, int value)
 {
 	struct qpnp_hap *hap = container_of(dev, struct qpnp_hap,
 					 timed_dev);
-
+	int prev_value;
 	spin_lock(&hap->td_lock);
+	prev_value = hap->td_value;
 	hap->td_value = value;
 	spin_unlock(&hap->td_lock);
+			/*
+		 * Fingerprint success haptic duration in the Android framework is
+		 * 30ms. After writing the 30ms value, the Android framework performs a
+		 * shoddy delay and writes 0ms to manually disable the haptic response.
+		 * This shoddy delay results in an inconsistent, <30ms haptic response
+		 * on fingerprint authentication, so ignore the request to manually
+		 * disable the 30ms haptics.
+		 */
+	if (!value && prev_value == 30)
+		return;
 
-	schedule_work(&hap->td_work);
+
+	queue_work(hap->wq, &hap->td_work);
 }
 
 /* play pwm bytes */
@@ -2329,7 +2343,11 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		dev_err(&spmi->dev, "hap config failed\n");
 		return rc;
 	}
-
+	hap->wq = alloc_workqueue("qpnp_haptics", WQ_HIGHPRI, 0);
+		if (!hap->wq) {
+			dev_err(&spmi->dev, "Failed to allocate workqueue\n");
+			return rc;
+	}
 	mutex_init(&hap->lock);
 	mutex_init(&hap->wf_lock);
 	mutex_init(&hap->set_lock);
