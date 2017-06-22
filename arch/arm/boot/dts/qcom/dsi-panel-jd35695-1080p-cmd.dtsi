@@ -199,8 +199,12 @@ dsi_jd35695_1080_cmd: qcom,mdss_dsi_jd35695_1080p_cmd {
 			      //qcom,mdss-tear-check-start-pos= <1920>; /* Height */
 			      //qcom,mdss-tear-check-rd-ptr-trigger-intr= <1921>; /* Height + 1 */
 
-				  qcom,mdss-pan-physical-width-dimension = <70>;
-				 qcom,mdss-pan-physical-height-dimension = <127>;
+			      qcom,mdss-pan-physical-width-dimension = <70>;
+			      qcom,mdss-pan-physical-height-dimension = <127>;
+			      qcom,mdss-dsi-pan-enable-dynamic-fps;
+			      qcom,mdss-dsi-pan-fps-update = "dfps_immediate_porch_mode";
+			      qcom,mdss-dsi-min-refresh-rate = <53>;
+			      qcom,mdss-dsi-max-refresh-rate = <60>;
 
 
 			      qcom,mdss-dsi-bl-pmic-control-type = "bl_ctrl_wled";
