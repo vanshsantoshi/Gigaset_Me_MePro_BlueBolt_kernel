@@ -376,13 +376,13 @@ KBUILD_CPPFLAGS := -D__KERNEL__
 KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
 		   -fno-strict-aliasing -fno-common \
 		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks \
+		   -Wno-format-security -Wno-array-bounds\
+		   -fno-delete-null-pointer-checks -Wno-format-overflow\
 		   -mcpu=cortex-a57.cortex-a53 -mtune=cortex-a57.cortex-a53 \
 		   -std=gnu89 -Wno-unused-const-variable -Wno-misleading-indentation \
 	       -Wno-memset-transposed-args  -Wno-bool-compare -Wno-logical-not-parentheses \
-		   -Wno-switch-bool \
-		   -Wno-unused-function -Wno-unused-variable
+		   -Wno-switch-bool -Wno-duplicate-decl-specifier -Wno-int-in-bool-context\
+		   -Wno-unused-function -Wno-unused-variable -Wno-memset-elt-size -Wno-bool-operation
 
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
