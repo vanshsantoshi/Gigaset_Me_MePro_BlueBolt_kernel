@@ -355,7 +355,7 @@ static void cpufreq_smartass_timer(unsigned long cpu)
 		reset_timer(cpu,this_smartass);
 }
 
-static void cpufreq_idle(void)
+void cpufreq_idle(void)
 {
 	struct smartass_info_s *this_smartass = &per_cpu(smartass_info, smp_processor_id());
 	struct cpufreq_policy *policy = this_smartass->cur_policy;
@@ -374,7 +374,7 @@ static void cpufreq_idle(void)
 		reset_timer(smp_processor_id(), this_smartass);
 }
 
-static int cpufreq_idle_notifier(struct notifier_block *nb,
+int cpufreq_idle_notifier(struct notifier_block *nb,
 	unsigned long val, void *data) {
 	struct smartass_info_s *this_smartass = &per_cpu(smartass_info, smp_processor_id());
 	struct cpufreq_policy *policy = this_smartass->cur_policy;
@@ -803,7 +803,7 @@ static void smartass_suspend(int cpu, int suspend)
 	reset_timer(smp_processor_id(),this_smartass);
 }
 
-static void smartass_early_suspend(struct early_suspend *handler) {
+void smartass_early_suspend(struct early_suspend *handler) {
 	int i;
 	if (suspended || sleep_ideal_freq==0) // disable behavior for sleep_ideal_freq==0
 		return;
@@ -812,7 +812,7 @@ static void smartass_early_suspend(struct early_suspend *handler) {
 		smartass_suspend(i,1);
 }
 
-static void smartass_late_resume(struct early_suspend *handler) {
+void smartass_late_resume(struct early_suspend *handler) {
 	int i;
 	if (!suspended) // already not suspended so nothing to do
 		return;
@@ -821,7 +821,7 @@ static void smartass_late_resume(struct early_suspend *handler) {
 		smartass_suspend(i,0);
 }
 
-static struct early_suspend smartass_power_suspend = {
+struct early_suspend smartass_power_suspend = {
 #ifdef CONFIG_MACH_HERO
 	.level = EARLY_SUSPEND_LEVEL_DISABLE_FB + 1,
 #endif
