@@ -18,7 +18,7 @@
 #include <trace/events/power.h>
 #include <linux/moduleparam.h>
 #include <linux/display_state.h>
-
+#include <linux/proc_fs.h>
 #include "power.h"
 
 static bool enable_qcom_rx_wakelock_ws = true;
