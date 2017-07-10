@@ -1,3 +1,4 @@
+
 /*
  * Flexible mmap layout support
  *
@@ -69,15 +70,14 @@ static unsigned long mmap_rnd(void)
 {
 	unsigned long rnd;
 
-	/*
-	 *  8 bits of randomness in 32bit mmaps, 20 address space bits
-	 * 28 bits of randomness in 64bit mmaps, 40 address space bits
-	 */
-	if (mmap_is_ia32())
-		rnd = (unsigned long)get_random_int() % (1<<8);
-	else
-		rnd = (unsigned long)get_random_int() % (1<<28);
-
+		if (mmap_is_ia32())
+#ifdef CONFIG_COMPAT
+			rnd = (unsigned long)get_random_long() & ((1UL << mmap_rnd_compat_bits) - 1);
+#else
+			rnd = (unsigned long)get_random_long() & ((1UL << mmap_rnd_bits) - 1);
+#endif
+		else
+			rnd = (unsigned long)get_random_long() & ((1UL << mmap_rnd_bits) - 1);
 	return rnd << PAGE_SHIFT;
 }
 
@@ -90,7 +90,19 @@ static unsigned long mmap_base(unsigned long rnd)
 	else if (gap > MAX_GAP)
 		gap = MAX_GAP;
 
-	return PAGE_ALIGN(TASK_SIZE - gap - rnd);
+	return PAGE_ALIGN(TASK_SIZE - gap - rnd());
+}
+
+/*
+ * Bottom-up (legacy) layout on X86_32 did not support randomization, X86_64
+ * does, but not when emulating X86_32
+ */
+static unsigned long mmap_legacy_base(unsigned long rnd)
+{
+	if (mmap_is_ia32())
+		return TASK_UNMAPPED_BASE;
+	else
+		return TASK_UNMAPPED_BASE + rnd;
 }
 
 /*
@@ -104,7 +116,7 @@ void arch_pick_mmap_layout(struct mm_struct *mm)
 	if (current->flags & PF_RANDOMIZE)
 		random_factor = mmap_rnd();
 
-	mm->mmap_legacy_base = TASK_UNMAPPED_BASE + random_factor;
+	mm->mmap_legacy_base = mmap_legacy_base(random_factor);
 
 	if (mmap_is_legacy()) {
 		mm->mmap_base = mm->mmap_legacy_base;

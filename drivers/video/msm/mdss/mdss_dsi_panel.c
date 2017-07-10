@@ -355,126 +355,6 @@ disp_en_gpio_err:
 	return rc;
 }
 
-#ifdef VENDOR_EDIT  //gzm@oem add 2015-04-23 for EVT2
-
-static int lcd_power_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
-{
- 
-	int rc = 0;
- 
-	if (ctrl_pdata->use_external_ic_power)
-	{
-	//printk(KERN_ERR"@@@@@@@@@@@@@@@@  eeeeeeeeeeee\n");
-		rc = gpio_request(ctrl_pdata->lcd_tps65132_en, "lcd_5v_en");
-		if (rc) {
-			pr_err("request lcd 5v en gpio failed, rc=%d\n",
-					rc);
-			return rc;
-		}
-
-		rc = gpio_request(ctrl_pdata->lcd_tps65132_en_n, "lcd_5v_en_n");
-		if (rc) {
-			pr_err("request lcd -5v en gpio failed, rc=%d\n",
-					rc);
-			goto lcd_5v_n_gpio_err;
-
-		}
-	}
- 
-	return rc;
- 
-lcd_5v_n_gpio_err:
-	if (ctrl_pdata->use_external_ic_power)
-	{
-		if (gpio_is_valid(ctrl_pdata->lcd_tps65132_en))
-			gpio_free(ctrl_pdata->lcd_tps65132_en); 
-	} 
- 	return rc;
-}
-#endif
-
-extern int syna_use_gesture;
-
-#ifdef VENDOR_EDIT  //gzm@oem add 2015-07-04 for EVT2 DVT PVT
-
-int vendor_lcd_power_on(struct mdss_panel_data *pdata, int enable)
-{
-
-	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
-	struct mdss_panel_info *pinfo = NULL;
-	int rc = 0;
-
-	if (pdata == NULL) {
-		pr_err("%s: Invalid input data\n", __func__);
-		return -EINVAL;
-	}
-
-	ctrl_pdata = container_of(pdata, struct mdss_dsi_ctrl_pdata,
-			panel_data);
-	if (ctrl_pdata->use_external_ic_power)
-	{
-
-		if (!gpio_is_valid(ctrl_pdata->lcd_tps65132_en)) {
-			pr_debug("%s:%d, lcd tps65132 5v en line not configured\n",
-					__func__, __LINE__);
-			return rc;
-		}
-
-		if (!gpio_is_valid(ctrl_pdata->lcd_tps65132_en_n)) {
-			pr_debug("%s:%d, lcd tps65132 -5v en  line not configured\n",
-					__func__, __LINE__);
-			return rc;
-		}
-	}
-	
-	pr_debug("%s: enable = %d\n", __func__, enable);
-	pinfo = &(ctrl_pdata->panel_data.panel_info);
-
-	if (enable) {
-		rc = lcd_power_request_gpios(ctrl_pdata);
-		if (rc) {
-			pr_err("gpio request failed\n");
-			return rc;
-		}
-			
-			if (ctrl_pdata->use_external_ic_power)
-			{
-				gpio_set_value((ctrl_pdata->lcd_tps65132_en), 1);
-				msleep(2);
-				gpio_set_value((ctrl_pdata->lcd_tps65132_en_n), 1);
-			
-			}
-
-	}
-
-	else{
-		
-		if (!syna_use_gesture)
-				{
-					if (ctrl_pdata->use_external_ic_power)
-					{
-						gpio_set_value((ctrl_pdata->lcd_tps65132_en_n), 0);
-						msleep(5);
-						gpio_set_value((ctrl_pdata->lcd_tps65132_en), 0);
-						msleep(5);
-					} 
-		
-				}
-				if (ctrl_pdata->use_external_ic_power)
-				{
-
-					gpio_free(ctrl_pdata->lcd_tps65132_en);
-					gpio_free(ctrl_pdata->lcd_tps65132_en_n);
-				}
-	}
-	return rc;
-
-}
-
-#endif
-
-
-
 int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
@@ -564,13 +444,8 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 			gpio_set_value((ctrl_pdata->disp_en_gpio), 0);
 			gpio_free(ctrl_pdata->disp_en_gpio);
 		}
-	#ifdef VENDOR_EDIT
-		if (!syna_use_gesture)    
-		{
 			gpio_set_value((ctrl_pdata->rst_gpio), 0);
 
-		}
-	#endif
 		if((get_boot_mode() == MSM_BOOT_MODE__RF)||(get_boot_mode() == MSM_BOOT_MODE__WLAN))
 			gpio_set_value((ctrl_pdata->rst_gpio), 0);
 

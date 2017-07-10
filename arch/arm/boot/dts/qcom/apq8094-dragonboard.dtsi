@@ -585,9 +585,12 @@
 	};
 };
 
+// Del by Harry
+/*
 &pcie0 {
 	vreg-3.3-supply = <&vph_pwr_vreg>;
 };
+*/
 
 &pcie1 {
 	vreg-3.3-supply = <&vph_pwr_vreg>;
@@ -834,13 +837,6 @@
 		qcom,master-en = <1>;
 		status = "okay";
 	};
-};
-
-&pmi8994_pwm_4 {
-	qcom,channel-owner = "lcd_bl";
-	qcom,lpg-dtest-line = <4>;
-	qcom,dtest-output = <1>;
-	status = "okay";
 };
 
 &pmi8994_gpios {

@@ -43,6 +43,56 @@
 				bias-pull-down;
 			};
 		};
+		
+/* #ifdef GIGASET_EDIT */
+/* jack.zheng@swdp.driver, 2015/02/12, add for IrRemote */
+
+		irremote_tx_active {
+			qcom,pins = <&gp 25>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <4>;
+			label = "irremote_tx_active";
+			irtx_active:default {
+				drive-strength = <16>;
+				bias-disable;
+			};
+		};
+		
+		irremote_tx_sleep {
+			qcom,pins = <&gp 25>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "irremote_tx_sleep";
+			irtx_sleep:sleep {
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+		
+		irremote_rx_active {
+			qcom,pins = <&gp 26>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <3>;
+			label = "irremote_rx_active";
+			irrx_active:default {
+				drive-strength = <16>;
+				bias-disable;
+			};
+		};
+		
+		irremote_rx_sleep {
+			qcom,pins = <&gp 26>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "irremote_rx_sleep";
+			irrx_sleep:sleep {
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+		};
+
+/* #endif //GIGASET_EDIT */
+
 
 		blsp2_uart2_active {
 			qcom,pins = <&gp 45>, <&gp 46>, <&gp 47>, <&gp 48>;
@@ -65,6 +115,32 @@
 				bias-disable;
 			};
 		};
+		
+		/* Add by Harry for ES704 */
+/*
+		blsp2_uart1_active {
+			qcom,pins = <&gp 41>, <&gp 42>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <2>;
+		    label = "blsp2_uart1_active";
+			hsuart1_active: default {
+				drive-strength = <16>;
+				bias-disable;
+			};
+		};
+
+		blsp2_uart1_sleep {
+			qcom,pins = <&gp 41>, <&gp 42>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <0>;
+		    label = "blsp2_uart1_sleep";
+			hsuart1_sleep: sleep {
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+*/
+		/* End of add by Harry for ES704 */
 
 		pmx_mdss: pmx_mdss {
 			label = "mdss-pins";
@@ -94,6 +170,9 @@
 			};
 		};
 
+/* //#ifndef GIGASET_EDIT
+//jowen.li@swdp.system, 2015/08/01 disable hdmi && disable gpio33 default config
+/*
 		pmx_hdmi_cec: pmx_hdmi_cec {
 			qcom,pin-func = <1>;
 			label = "hdmi-cec-pins";
@@ -132,7 +211,7 @@
 				bias-pull-down;
 			};
 		};
-
+*/
 		mhl_intr: mhl_intr {
 			qcom,pins = <&gp 57>;
 			qcom,num-grp-pins = <1>;
@@ -210,6 +289,88 @@
 		        };
 		};
 
+/* #ifdef GIGASET_EDIT */
+/* billy.wang@swdp.driver, 2015/07/03, add for fingerprint */
+		spi_12_active {
+			/* MOSI, MISO, CLK */
+			qcom,pins = <&gp 85>, <&gp 86>, <&gp 87>, <&gp 88>; /* add cs */
+			qcom,num-grp-pins = <4>;
+			qcom,pin-func = <1>;
+			label = "spi_12-active";
+
+			spi_12_active: spi_active {
+			       drive-strength = <16>;
+			       bias-disable = <0>;
+		        };
+		};
+
+		spi_12_suspend {
+			/* MOSI, MISO, CS, CLK */
+			qcom,pins = <&gp 85>, <&gp 86>, <&gp 87>, <&gp 88>; /* add cs */
+			qcom,num-grp-pins = <4>;
+			qcom,pin-func = <1>;
+			label = "spi_12-suspend";
+
+			spi_12_sleep: spi_sleep {
+			       drive-strength = <2>;
+			       bias-pull-down;
+		        };
+		};
+/* #endif //GIGASET_EDIT */
+
+        // Add by Harry for ES704
+		spi_10_data_active {
+			/* MOSI, MISO */
+			qcom,pins = <&gp 53>, <&gp 54>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <3>;
+			label = "spi_10_data-active";
+
+			spi_10_data_active: spi_active {
+			       drive-strength = <16>;
+			       bias-disable = <0>;
+		        };
+		};
+
+		spi_10_data_suspend {
+			/* MOSI, MISO */
+			qcom,pins = <&gp 53>, <&gp 54>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <3>;
+			label = "spi_10_data-suspend";
+
+			spi_10_data_sleep: spi_sleep {
+			       drive-strength = <2>;
+			       bias-pull-down;
+		        };
+		};
+		
+		spi_10_ctl_active {
+			/* CS, CLK */
+			qcom,pins = <&gp 55>, <&gp 56>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <2>;
+			label = "spi_10_ctl-active";
+
+			spi_10_ctl_active: spi_active {
+			       drive-strength = <16>;
+			       bias-disable = <0>;
+		        };
+		};
+
+		spi_10_ctl_suspend {
+			/* CS, CLK */
+			qcom,pins = <&gp 55>, <&gp 56>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <2>;
+			label = "spi_10_ctl-suspend";
+
+			spi_10_ctl_sleep: spi_sleep {
+			       drive-strength = <2>;
+			       bias-pull-down;
+		        };
+		};
+		/* End of add by Harry */
 		pmx_i2c_1 {
 			qcom,pins = <&gp 2>, <&gp 3>; /* SDA, SCL */
 			qcom,num-grp-pins = <2>;
@@ -228,191 +389,6 @@
 				bias-disable;
 			};
 		};
-//#ifdef VENDOR_EDIT//add for fingerprint fpc1150 SPI pin use pinctrl
-
-		spi_12_active {
-			qcom,pins = <&gp 85>, <&gp 86>, <&gp 88>;
-			qcom,num-grp-pins = <3>;
-			qcom,pin-func = <1>;
-			label = "spi_12-active";
-
-			spi_12_active: spi_12_active {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-		        };
-		};
-
-		spi_12_suspend {
-			qcom,pins = <&gp 85>, <&gp 86>, <&gp 88>;
-			qcom,num-grp-pins = <3>;
-			qcom,pin-func = <1>;
-			label = "spi_12-suspend";
-
-			spi_12_sleep: spi_12_sleep {
-			       drive-strength = <2>;
-			       bias-pull-down;
-		        };
-		};
-		
-		spi_12_cs0_active {
-			qcom,pins = <&gp 87>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <1>;
-			label = "spi_12-cs0-active";
-
-			spi_12_cs0_active: cs0_active {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-		        };
-		};
-
-		spi_12_cs0_suspend {
-			qcom,pins = <&gp 87>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <1>;
-			label = "spi_12-cs0-suspend";
-
-			spi_12_cs0_sleep: cs0_sleep {
-			       drive-strength = <2>;
-			       bias-disable = <0>;
-		        };
-		};
-		/*--------------------TEE----------------------*/
-		fpc_spi_active {
-			qcom,pins = <&gp 85>, <&gp 86>, <&gp 88>;
-			qcom,num-grp-pins = <3>;
-			qcom,pin-func = <1>;
-			label = "fpc_spi_active";
-
-			fpc_spi_active: fpc_spi_active {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-		        };
-		};
-
-		fpc_spi_suspend {
-			qcom,pins = <&gp 85>, <&gp 86>, <&gp 88>;
-			qcom,num-grp-pins = <3>;
-			qcom,pin-func = <1>;
-			label = "fpc_spi_suspend";
-
-			fpc_spi_suspend: fpc_spi_suspend {
-			       drive-strength = <2>;
-			       bias-pull-down;
-		        };
-		};
-		
-		fpc_reset_reset {
-			qcom,pins = <&gp 89>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <0>;
-			label = "fpc_reset_reset";
-
-			fpc_reset_reset: fpc_reset_reset {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-				   output-low;
-		        };
-		};
-		fpc_reset_active {
-			qcom,pins = <&gp 89>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <0>;
-			label = "fpc_reset_active";
-
-			fpc_reset_active: fpc_reset_active {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-				   output-high;
-		        };
-		};
-		fpc_cs_low {
-			qcom,pins = <&gp 89>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <1>;
-			label = "fpc_cs_low";
-
-			fpc_cs_low: fpc_cs_low {
-			       drive-strength = <2>;
-			       bias-disable = <0>;
-				   output-low;
-		        };
-		};
-		fpc_cs_high {
-			qcom,pins = <&gp 89>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <1>;
-			label = "fpc_cs_high";
-
-			fpc_cs_high: fpc_cs_high {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-				   output-high;
-		        };
-		};
-		fpc_cs_active {
-			qcom,pins = <&gp 89>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <1>;
-			label = "fpc_cs_active";
-
-			fpc_cs_active: fpc_cs_active {
-			       drive-strength = <12>;
-			       bias-disable = <0>;
-				   output-high;
-		        };
-		};
-		fpc_irq_active {
-			qcom,pins = <&gp 90>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <0>;
-			label = "fpc_irq_active";
-
-			fpc_irq_active: fpc_irq_active {
-			       drive-strength = <2>;
-			       bias-disable = <0>;
-				   input-enable;
-		        };
-		};
-		/*--------------------TEE----------------------*/
-
-//#endif/*VENDOR_EDIT*/
-
-//#ifdef VENDOR_EDIT//add for tristate key
-		tristate_key2{
-			qcom,pins = <&gp 77>;
-			qcom,pin-func = <0>;
-			qcom,num-grp-pins = <1>;
-			label = "tri_state_key2";
-			tristate_key2_active: active {
-				drive-strength = <2>;
-				bias-disable;
-			};
-			tristate_key2_suspend: suspend {
-				drive-strength = <2>;
-				bias-disable;
-			};
-		};
-
-//#endif/*VENDOR_EDIT*/
-
-//#ifdef VENDOR_EDIT//add for switch_cover
-		switch_cover_int{
-			qcom,pins = <&gp 66>;
-			qcom,pin-func = <0>;
-			qcom,num-grp-pins = <1>;
-			label = "switch_cover_int";
-			cover_int_active: active {
-				drive-strength = <2>;
-				bias-disable;
-			};
-			cover_int_suspend: suspend {
-				drive-strength = <2>;
-				bias-disable;
-			};
-		};
-
-//#endif/*VENDOR_EDIT*/
 
 		audio_ext_devices {
 			qcom,pins = <&gp 96>;
@@ -462,7 +438,7 @@
 			label = "sdc1-cmd";
 			sdc1_cmd_on: cmd_on {
 				bias-pull-up; /* pull up */
-				drive-strength = <8>; /* 8 MA */
+				drive-strength = <16>; /*jung.liu@system.swdp modify the driver current from 8 MA to 16mA*/
 			};
 			sdc1_cmd_off: cmd_off {
 				bias-pull-up = <0x3>; /* pull up */
@@ -476,7 +452,7 @@
 			label = "sdc1-data";
 			sdc1_data_on: data_on {
 				bias-pull-up; /* pull up */
-				drive-strength = <8>; /* 8 MA */
+				drive-strength = <16>; /*jung.liu@system.swdp modify the driver current from 8 MA to 16mA */
 			};
 			sdc1_data_off: data_off {
 				bias-pull-up; /* pull up */
@@ -737,25 +713,22 @@
 			};
 		};
 
-//#ifdef VENDOR_EDIT
-/*suzhiguang@Multimdia.audio.driver, remove unused pins which conflic with quat i2s.*/
-//		pmx_ts {
-//			qcom,pins = <&gp 60>, <&gp 61>;
-//			qcom,pin-func = <0>;
-//			qcom,num-grp-pins = <2>;
-//			label = "pmx_ts";
-//
-//			ts_active: ts_active {
-//				drive-strength = <16>;
-//				bias-pull-up;
-//			};
-//
-//			ts_suspend: ts_suspend {
-//				drive-strength = <16>;
-//				bias-disable;
-//			};
-//		};
-//#endif
+		pmx_ts {
+			qcom,pins = <&gp 60>, <&gp 61>;
+			qcom,pin-func = <0>;
+			qcom,num-grp-pins = <2>;
+			label = "pmx_ts";
+
+			ts_active: ts_active {
+				drive-strength = <16>;
+				bias-pull-up;
+			};
+
+			ts_suspend: ts_suspend {
+				drive-strength = <16>;
+				bias-disable;
+			};
+		};
 
 		/* CoreSight */
 		tpiu_seta_1 {
@@ -801,7 +774,8 @@
 				bias-disable;
 			};
 		};
-
+        /* Del by Harry */
+		/*
 		tpiu_seta_5 {
 			qcom,pins = <&gp 63>;
 			qcom,num-grp-pins = <1>;
@@ -812,6 +786,7 @@
 				bias-disable;
 			};
 		};
+		*/
 
 		tpiu_seta_6 {
 			qcom,pins = <&gp 64>;
@@ -1067,7 +1042,7 @@
 		};
 
 		tpiu_setb_11 {
-			qcom,pins = <&gp 25>;
+			/*qcom,pins = <&gp 25>;*/ /*by jack.zheng for IrRemote*/
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <8>;
 			label = "tpiu-setb-11";
@@ -1078,7 +1053,7 @@
 		};
 
 		tpiu_setb_12 {
-			qcom,pins = <&gp 26>;
+			/*qcom,pins = <&gp 26>;*/ /*by jack.zheng for IrRemote*/
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <7>;
 			label = "tpiu-setb-12";
@@ -1133,7 +1108,7 @@
 		};
 
 		tpiu_setb_17 {
-			qcom,pins = <&gp 93>;
+			qcom,pins = <&gp 95>;
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <7>;
 			label = "tpiu-setb-17";
@@ -1173,18 +1148,6 @@
 			trigout_c: trigout_c {
 				drive-strength = <2>;
 				bias-disable;
-			};
-		};
-
-		wcd9xxx_intr {
-			qcom,pins = <&gp 72>;
-			qcom,num-grp-pins = <1>;
-			qcom,pin-func = <0>;
-			label = "wcd-intr-default";
-			wcd_intr_default: default {
-				drive-strength = <2>; /* 2 MA */
-				bias-pull-down; /* pull down */
-				input-enable;
 			};
 		};
 
@@ -1267,12 +1230,7 @@
 
 		cam_sensor_rear_active {
 			/* RESET, STANDBY */
-//#ifdef VENDOR_EDIT
-//changed by zhangxiaowei@camera 20150321 for gpio control Vaf			
-			qcom,pins = <&gp 92>, <&gp 93>;
-//#else
-                        //qcom,pins = <&gp 92>, <&gp 91>;
-//#endif/*VENDOR_EDIT*/			
+			qcom,pins = <&gp 92>, <&gp 114>;
 			qcom,num-grp-pins = <2>;
 			label = "cam_sensor_rear_active";
 			/* active state */
@@ -1284,12 +1242,7 @@
 
 		cam_sensor_rear_suspend {
 			/* RESET, STANDBY */
-//#ifdef VENDOR_EDIT
-//changed by zhangxiaowei@camera 20150321 for gpio control Vaf			
-			qcom,pins = <&gp 92>, <&gp 93>;
-//#else
-                        //qcom,pins = <&gp 92>, <&gp 91>;
-//#endif/*VENDOR_EDIT*/	
+			qcom,pins = <&gp 92>, <&gp 114>;
 			qcom,num-grp-pins = <2>;
 			label = "cam_sensor_rear_suspend";
 			/*suspended state */
@@ -1420,12 +1373,13 @@
 			};
 		};
 
+		/* Del by Harry,it used by ES704 */
+		/*
 		pcie0_clkreq {
 			qcom,pins = <&gp 54>;
 			qcom,num-grp-pins = <1>;
 			qcom,pin-func = <2>;
 			label = "pcie0-clkreq";
-			/* default state */
 			pcie0_clkreq_default: pcie0_clkreq_default {
 				drive-strength = <2>;
 				bias-pull-up;
@@ -1436,23 +1390,25 @@
 			qcom,pins = <&gp 53>;
 			qcom,num-grp-pins = <1>;
 			label = "pcie0-perst";
-			/* default state */
 			pcie0_perst_default: pcie0_perst_default {
 				drive-strength = <2>;
 				bias-pull-down;
 			};
 		};
+		*/
 
+		/* Del by Harry,not use PCIE0 */
+		/*
 		pcie0_wake {
 			qcom,pins = <&gp 55>;
 			qcom,num-grp-pins = <1>;
 			label = "pcie0-wake";
-			/* default state */
 			pcie0_wake_default: pcie0_wake_default {
 				drive-strength = <2>;
 				bias-pull-down;
 			};
 		};
+		*/
 
 		pcie1_clkreq {
 			qcom,pins = <&gp 36>;
@@ -1540,155 +1496,151 @@
 			};
 		};
 
-//#ifdef VENDOR_EDIT
-//		pmx_pri_mi2s_sleep {
-//			qcom,pins = <&gp 65>, <&gp 66>;
-//			qcom,num-grp-pins = <2>;
-//			qcom,pin-func = <0>;
-//			label = "pri_mi2s_sleep";
-//			pri_mi2s_sleep: pri_mi2s_sleep {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-pull-down;		/* PULL DOWN */
-//				input-enable;
-//			};
-//		};
-
-//		pmx_pri_mi2s_active {
-//			qcom,pins = <&gp 65>, <&gp 66>;
-//			qcom,num-grp-pins = <2>;
-//			qcom,pin-func = <1>;
-//			label = "pri_mi2s_active";
-//			pri_mi2s_active: pri_mi2s_active {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-disable;		/* NO PULL */
-//				output-high;
-//			};
-//		};
-
-//		pmx_pri_mi2s_sd0_sleep {
-//			qcom,pins = <&gp 67>;
-//			qcom,num-grp-pins = <1>;
-//			qcom,pin-func = <0>;
-//			label = "pri_mi2s_sd0_sleep";
-//pri_mi2s_sd0_sleep: pri_mi2s_sd0_sleep {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-pull-down;		/* PULL DOWN */
-//				input-enable;
-//			};
-//	};
-
-//		pmx_pri_mi2s_sd0_active {
-//			qcom,pins = <&gp 67>;
-//			qcom,num-grp-pins = <1>;
-//			qcom,pin-func = <1>;
-//			label = "pri_mi2s_sd0_active";
-//			pri_mi2s_sd0_active: pri_mi2s_sd0_active {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-disable;		/* NO PULL */
-//			};
-//		};
-
-//#endif
-
-//#ifdef VENDOR_EDIT  				
-/*zhiguang.su@MultiMedia.AudioDrv,2015-4-8,remove unused pri-i2s for conflict pins with BSP module.*/
-//		pmx_pri_mi2s {
-//			qcom,pins = <&gp 65>, <&gp 66>;
-//			qcom,num-grp-pins = <2>;
-//			qcom,pin-func = <1>;
-//			label = "pri_mi2s";
-//			pri_mi2s_sleep: pri_mi2s_sleep {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-pull-down;		/* PULL DOWN */
-//			};
-//			pri_mi2s_active: pri_mi2s_active {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-disable;		/* NO PULL */
-//				output-high;
-//			};
-//		};
-
-//		pmx_pri_mi2s_sd0 {
-//			qcom,pins = <&gp 67>;
-//			qcom,num-grp-pins = <1>;
-//			qcom,pin-func = <1>;
-//			label = "pri_mi2s_sd0";
-//			pri_mi2s_sd0_sleep: pri_mi2s_sd0_sleep {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-pull-down;		/* PULL DOWN */
-//			};
-//			pri_mi2s_sd0_active: pri_mi2s_sd0_active {
-//				drive-strength = <2>;	/* 2 mA */
-//				bias-disable;		/* NO PULL */
-//			};
-//		};
-//#endif	
-
-      //#ifdef VENDOR_EDIT	
-      /*zhiguang.su@MultiMedia.AudioDrv ,add for quat i2s*/	
-	pmx_quat_mi2s {
-		qcom,pins = <&gp 58>, <&gp 59>;
-		qcom,num-grp-pins = <2>;
-		qcom,pin-func = <1>;
-		label = "quat_mi2s";
-		quat_mi2s_sleep: quat_mi2s_sleep {
-			drive-strength = <2>;	/* 2 mA */
-			bias-pull-down;		/* PULL DOWN */
+		pmx_pri_mi2s {
+			qcom,pins = <&gp 65>, <&gp 66>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <1>;
+			label = "pri_mi2s";
+			pri_mi2s_sleep: pri_mi2s_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			pri_mi2s_active: pri_mi2s_active {
+				drive-strength = <2>;	/* 2 mA */
+				bias-disable;		/* NO PULL */
+				output-high;
+			};
 		};
-		quat_mi2s_active: quat_mi2s_active {
-			drive-strength = <8>;	/* 8 mA */
-			bias-disable;		/* NO PULL */
-			output-high;
-		};
-	};
-               
-       pmx_quat_mi2s_mclk {
-		qcom,pins = <&gp 57>;
-		qcom,num-grp-pins = <1>;
-		qcom,pin-func = <1>;
-		label = "quat_mi2s_mclk";
-		quat_mi2s_mclk_sleep: quat_mi2s_mclk_sleep {
-			drive-strength = <2>;	/* 2 mA */
-			bias-pull-down;		/* PULL DOWN */
-		};
-		quat_mi2s_mclk_active: quat_mi2s_mclk_active {
-			drive-strength = <8>;	/* 8 mA */
-			bias-disable;		/* NO PULL */
-		};
-	};
-                
-	pmx_quat_mi2s_sd0 {
-		qcom,pins = <&gp 60>;
-		qcom,num-grp-pins = <1>;
-		qcom,pin-func = <1>;
-		label = "quat_mi2s_sd0";
-		quat_mi2s_sd0_sleep: quat_mi2s_sd0_sleep {
-			drive-strength = <2>;	/* 2 mA */
-			bias-pull-down;		/* PULL DOWN */
-		};
-		quat_mi2s_sd0_active: quat_mi2s_sd0_active {
-			drive-strength = <8>;	/* 8 mA */
-			bias-disable;		/* NO PULL */
-		};
-	};
 
-	pmx_quat_mi2s_sd1 {
-		qcom,pins = <&gp 61>;
-		qcom,num-grp-pins = <1>;
-		qcom,pin-func = <1>;
-		label = "quat_mi2s_sd1";
-		quat_mi2s_sd1_sleep: quat_mi2s_sd1_sleep {
-			drive-strength = <2>;	/* 2 mA */
-			bias-pull-down;		/* PULL DOWN */
+		pmx_pri_mi2s_sd0 {
+			qcom,pins = <&gp 67>,<&gp 68>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <1>;
+			label = "pri_mi2s_sd0";
+			pri_mi2s_sd0_sleep: pri_mi2s_sd0_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			pri_mi2s_sd0_active: pri_mi2s_sd0_active {
+				drive-strength = <2>;	/* 2 mA */
+				bias-disable;		/* NO PULL */
+			};
 		};
-		quat_mi2s_sd1_active: quat_mi2s_sd1_active {
-			drive-strength = <8>;	/* 8 mA */
-			bias-disable;		/* NO PULL */
+		
+		/* Add by Harry for Smart PA */
+		pmx_pri_mi2s_sdi {
+			qcom,pins = <&gp 68>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <1>;
+			label = "pri_mi2s_sdi";
+			pri_mi2s_sdi_sleep: pri_mi2s_sdi_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			pri_mi2s_sdi_active: pri_mi2s_sdi_active {
+				drive-strength = <2>;	/* 2 mA */
+				bias-disable;		/* NO PULL */
+			};
 		};
-	};		
+		
+		/* Add by Harry */
+		/* For ES704 */         
+		es75x_event_irq_gpio {
+			qcom,pins = <&gp 52>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "es75x_event_irq_gpio";
 
-//#endif VENDOR_EDIT
+			es75x_event_sleep: es75x_event_sleep {
+				drive-strength = <6>;
+				bias-pull-up;
+			};
+			es75x_event_active: es75x_event_active {
+				drive-strength = <6>;
+				bias-pull-up;
+			};
+		};               
+   
+		es75x_api_irq_gpio {
+			qcom,pins = <&gp 77>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "es75x_api_irq_gpio";
 
+			es75x_api_sleep: es75x_api_sleep {
+				drive-strength = <6>;
+				bias-pull-up;
+			};
+			
+			es75x_api_active: es75x_api_active {
+				drive-strength = <6>;
+				bias-pull-up;
+			};
+		};      
+		/* End of add by Harry */
+		
+
+        pmx_tert_mi2s {
+			qcom,pins = <&gp 74>, <&gp 75>;
+			qcom,num-grp-pins = <2>;
+			qcom,pin-func = <1>;
+			label = "tert_mi2s";
+			tert_mi2s_sleep: tert_mi2s_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			tert_mi2s_active: tert_mi2s_active {
+				drive-strength = <8>;	/* 8 mA */
+				bias-disable;		/* NO PULL */
+				output-high;
+			};
+		};
+
+        pmx_tert_mi2s_mclk {
+			qcom,pins = <&gp 73>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <1>;
+			label = "tert_mi2s_mclk";
+			tert_mi2s_mclk_sleep: tert_mi2s_mclk_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			tert_mi2s_mclk_active: tert_mi2s_mclk_active {
+				drive-strength = <8>;	/* 8 mA */
+				bias-disable;		/* NO PULL */
+			};
+		};
+
+		pmx_tert_mi2s_sd0 {
+			qcom,pins = <&gp 76>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <1>;
+			label = "tert_mi2s_sd0";
+			tert_mi2s_sd0_sleep: tert_mi2s_sd0_sleep {
+				drive-strength = <2>;	/* 2 mA */
+				bias-pull-down;		/* PULL DOWN */
+			};
+			tert_mi2s_sd0_active: tert_mi2s_sd0_active {
+				drive-strength = <8>;	/* 8 mA */
+				bias-disable;		/* NO PULL */
+			};
+		};
+/*
+		pmx_tert_mi2s_sd1 {
+			qcom,pins = <&gp 77>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <1>;
+			label = "tert_mi2s_sd1";
+			tert_mi2s_sd1_sleep: tert_mi2s_sd1_sleep {
+				drive-strength = <2>;
+				bias-pull-down;
+			};
+			tert_mi2s_sd1_active: tert_mi2s_sd1_active {
+				drive-strength = <8>;
+				bias-disable;
+			};
+		};
+*/
 		tsif0_signals {
 			qcom,pins = <&gp 89>,	/* TSIF0 CLK */
 				<&gp 90>,	/* TSIF0 Enable */
@@ -1701,6 +1653,24 @@
 				bias-pull-down;		/* pull down */
 			};
 		};
+
+		/* Add by billy */
+		/* For finger */         
+		finger_event_irq_gpio {
+			qcom,pins = <&gp 90>;
+			qcom,num-grp-pins = <1>;
+			qcom,pin-func = <0>;
+			label = "finger_event_irq_gpio";
+			finger_event_suspend: finger_event_suspend {
+				drive-strength = <6>;
+				bias-pull-down;		/* PULL DOWN */
+			};
+			finger_event_active: finger_event_active {
+				drive-strength = <6>;
+				bias-disable;		/* NO PULL */
+			};
+		}; 
+
 
 		/* sync signal is only used if configured to mode-2 */
 		tsif0_sync {
@@ -1715,7 +1685,7 @@
 		};
 
 		tsif1_signals {
-			qcom,pins = <&gp 93>,	/* TSIF1 CLK */
+			qcom,pins = <&gp 95>,	/* TSIF1 CLK */
 				<&gp 94>,	/* TSIF1 Enable */
 				<&gp 95>;	/* TSIF1 DATA */
 			qcom,num-grp-pins = <3>;

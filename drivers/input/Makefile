@@ -24,6 +24,11 @@ obj-$(CONFIG_INPUT_TABLET)	+= tablet/
 obj-$(CONFIG_INPUT_TOUCHSCREEN)	+= touchscreen/
 obj-$(CONFIG_INPUT_MISC)	+= misc/
 
+# ifdef GIGASET_EDIT
+# billy.wang@swdp.driver, 2015/07/03, add for fingerpint
+obj-$(CONFIG_INPUT_FINGERPRINT)	+= fingerprint/
+#endif
+
 obj-$(CONFIG_INPUT_APMPOWER)	+= apm-power.o
 obj-$(CONFIG_INPUT_KEYRESET)	+= keyreset.o
 obj-$(CONFIG_INPUT_KEYCOMBO)	+= keycombo.o

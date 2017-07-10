@@ -214,6 +214,11 @@ source "drivers/input/touchscreen/Kconfig"
 
 source "drivers/input/misc/Kconfig"
 
+# ifdef GIGASET_EDIT
+# billy.wang@swdp.driver,2015/07/03, add for fingerprint
+source "drivers/input/fingerprint/Kconfig"
+# endif 
+
 endif
 
 menu "Hardware I/O ports"

@@ -553,6 +553,18 @@ config SND_SOC_TPA6130A2
 config SND_SOC_MSM_STUB
 	tristate
 
+# Add by harry
+# For ES9018 codec
+config SND_SOC_ES9018
+       bool "Support for ES9018 codec"
+
+# For NXP smart PA
+config SND_SOC_TFA9890
+      bool "SUpport for NXP TFA9890 smart PA"
+# For revice PA
+config SND_SOC_LM48560
+      bool "Support for LM48560"
+
 config SND_SOC_MSM_HDMI_CODEC_RX
 	bool "HDMI Audio Playback"
 	depends on FB_MSM_MDSS_HDMI_PANEL && (SND_SOC_MSM8974 || SND_SOC_APQ8084 || SND_SOC_MSM8994)

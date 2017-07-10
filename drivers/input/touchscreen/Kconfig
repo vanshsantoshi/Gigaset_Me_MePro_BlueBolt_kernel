@@ -955,15 +955,16 @@ config TOUCHSCREEN_FT5X06_GESTURE
 
          If unsure, say N.
 
-config TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE_EXTRA_SYSFS
-	bool "Synaptics DSX firmware update extra sysfs attributes"
-	depends on TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE
-	help
-	  Say Y here to enable support for extra sysfs attributes
-	  supporting firmware update in a development environment.
-	  This does not affect the core or other subsystem attributes.
+config TOUCHSCREEN_MSTAR21XX
+       tristate "mstar touchscreens"
+       depends on I2C
+       help
+         Say Y here if you have a mstar touchscreen.
 
-	  If unsure, say N.
+         If unsure, say N.
+
+         To compile this driver as a module, choose M here: the
+         module will be called msg21xx_ts.
 
 config TOUCHSCREEN_GEN_VKEYS
        tristate "Touchscreen Virtual Keys Driver"
@@ -1061,25 +1062,4 @@ config INPUT_MT_WRAPPER
 
 	  If unsure, say N.
 
-#ifdef VENDOR_EDIT /* LiuPing@Phone.BSP.Sensor, 2014/10/11, add for tp. */
-config TOUCHSCREEN_SYNAPTICS_S3508_I2C_RMI
-	tristate "Synaptics s3508 i2c touchscreen"
-	depends on I2C
-	help
-	  This enables support for Synaptics s3508 RMI over I2C based touchscreens.
-#endif /*VENDOR_EDIT*/
-#ifdef VENDOR_EDIT /* lifeng@BSP, 2015/3/19, add for tp_key. */
-config TOUCHSCREEN_SYNAPTICS_S1302_I2C_RMI
-	tristate "Synaptics s1302 i2c touchscreen"
-	depends on I2C
-	help
-	  This enables support for Synaptics s1302 RMI over I2C based touch key.
-#endif /*VENDOR_EDIT*/
-#ifdef VENDOR_EDIT /* lifeng@BSP, 2015/3/19, add for tp_key. */
-config TOUCHSCREEN_SYNAPTICS_S3320_I2C_RMI
-	tristate "Synaptics s3320 i2c touchscreen"
-	depends on I2C
-	help
-	  This enables support for Synaptics s1302 RMI over I2C based touch key.
-#endif /*VENDOR_EDIT*/
 endif

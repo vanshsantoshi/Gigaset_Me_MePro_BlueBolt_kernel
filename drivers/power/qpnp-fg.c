@@ -4461,17 +4461,28 @@ wait:
 
 	profile_node = of_batterydata_get_best_profile(batt_node, "bms",
 							fg_batt_type);
+#ifndef GIGASET_EDIT
+/* byron.ran@swdp.driver, 2015/06/18, if ADC the battery id not correct, use default */
 	if (!profile_node) {
 		pr_err("couldn't find profile handle\n");
-		rc = -ENODATA;
-/* david.liu@oneplus.tw,20160111  Rebase the fg driver to 8994L */
-#ifdef VENDOR_EDIT
 		old_batt_type = default_batt_type;
+		rc = -ENODATA;
 		goto fail;
-#else
-		goto no_profile;
-#endif
 	}
+#else
+	if (!profile_node) {
+		pr_err("couldn't find profile by battery id, use default\n");
+		if (device_version >= DEVICE_VERSION_17427 && device_version <= DEVICE_VERSION_17427_MP) {
+			fg_batt_type = "x9_w_200k_3875mah";
+			pr_info("Fix the battery profile x9_w_200k_3875mah");
+		} else {
+			fg_batt_type = "x9_w_150k_3000mah";
+			pr_info("Fix the battery profile x9_w_150k_3000mah");
+		}
+		profile_node = of_batterydata_get_best_profile(batt_node, "bms",
+							fg_batt_type);
+	}
+#endif
 
 	/* read rslow compensation values if they're available */
 	rc = of_property_read_u32(profile_node, "qcom,chg-rs-to-rslow",

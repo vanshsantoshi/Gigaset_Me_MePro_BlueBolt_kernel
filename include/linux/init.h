@@ -148,6 +148,37 @@ typedef void (*ctor_fn_t)(void);
 extern int do_one_initcall(initcall_t fn);
 extern char __initdata boot_command_line[];
 extern char *saved_command_line;
+#ifdef GIGASET_EDIT
+/*cesc.xu@swdp.system, 2015/04/22. add hardware identification support */
+enum device_version_giga {
+        DEVICE_VERSION_UNKNOWN = 0,
+        DEVICE_VERSION_17421,
+        DEVICE_VERSION_17421_EVT1,
+        DEVICE_VERSION_17421_EVT2,
+        DEVICE_VERSION_17421_DVT,
+        DEVICE_VERSION_17421_PVT,
+        DEVICE_VERSION_17421_MP,
+        DEVICE_VERSION_17427 = 16,
+        DEVICE_VERSION_17427_EVT1,
+        DEVICE_VERSION_17427_EVT2,
+        DEVICE_VERSION_17427_DVT,
+        DEVICE_VERSION_17427_PVT,
+        DEVICE_VERSION_17427_MP,
+        DEVICE_VERSION_SLOANL = 32,
+        DEVICE_VERSION_SLOANL_EVT1,
+        DEVICE_VERSION_SLOANL_EVT2,
+        DEVICE_VERSION_SLOANL_DVT,
+        DEVICE_VERSION_SLOANL_PVT,
+        DEVICE_VERSION_SLOANL_MP,
+};
+
+/*cesc.xu@swdp.system, 2015/04/22. add hardware identification support */
+extern enum device_version_giga device_version;
+
+/*jowen.li@swdp.system, 2015/04/27. add bootmode */
+extern unsigned int bootmode_flag;
+
+#endif /* GIGASET_EDIT */
 extern unsigned int reset_devices;
 
 /* used by init/main.c */

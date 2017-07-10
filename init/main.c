@@ -70,7 +70,6 @@
 #include <linux/shmem_fs.h>
 #include <linux/slab.h>
 #include <linux/perf_event.h>
-#include <linux/file.h>
 #include <linux/ptrace.h>
 #include <linux/blkdev.h>
 #include <linux/elevator.h>
@@ -129,6 +128,24 @@ extern void softirq_init(void);
 char __initdata boot_command_line[COMMAND_LINE_SIZE];
 /* Untouched saved command line (eg. for /proc) */
 char *saved_command_line;
+#ifdef GIGASET_EDIT
+//jung.liu@swdp.system, 2015/05/07 added for the factory mode
+enum{
+	MSM_BOOT_MODE_NORMAL,
+	MSM_BOOT_MODE_FASTBOOT,
+	MSM_BOOT_MODE_RECOVERY,
+	MSM_BOOT_MODE_RF,
+	MSM_BOOT_MODE_CHARGE,
+	MSM_BOOT_MODE_ALARM,
+};
+
+/*cesc.xu@swdp.system, 2015/04/22. add hardware identification support */
+enum device_version_giga device_version = 0;
+
+/*jowen.li@swdp.system, 2015/04/27. add bootmode */
+unsigned int bootmode_flag= 0;
+#endif /* GIGASET_EDIT */
+
 /* Command line for parameter parsing */
 static char *static_command_line;
 
@@ -350,6 +367,92 @@ static void __init setup_command_line(char *command_line)
 	static_command_line = alloc_bootmem(strlen (command_line)+1);
 	strcpy (saved_command_line, boot_command_line);
 	strcpy (static_command_line, command_line);
+#ifdef GIGASET_EDIT
+/*cesc.xu@swdp.system, 2015/04/22. add hardware identification support */
+	if (strstr(saved_command_line, "android.version=02")) { /* 17421 */
+                device_version = DEVICE_VERSION_17421_EVT1;
+                pr_notice("device_version=2\n");
+        } else if (strstr(saved_command_line, "android.version=03")) {
+                device_version = DEVICE_VERSION_17421_EVT2;
+                pr_notice("device_version=3\n");
+        } else if (strstr(saved_command_line, "android.version=04")) {
+                device_version = DEVICE_VERSION_17421_DVT;
+                pr_notice("device_version=4\n");
+        } else if (strstr(saved_command_line, "android.version=05")) {
+                device_version = DEVICE_VERSION_17421_PVT;
+                pr_notice("device_version=5\n");
+        } else if (strstr(saved_command_line, "android.version=06")) {
+                device_version = DEVICE_VERSION_17421_MP;
+                pr_notice("device_version=6\n");
+        } else if (strstr(saved_command_line, "android.version=17")) {  /* 17427 */
+                device_version = DEVICE_VERSION_17427_EVT1;
+                pr_notice("device_version=17\n");
+        } else if (strstr(saved_command_line, "android.version=18")) {
+                device_version = DEVICE_VERSION_17427_EVT2;
+                pr_notice("device_version=18\n");
+        } else if (strstr(saved_command_line, "android.version=19")) {
+                device_version = DEVICE_VERSION_17427_DVT;
+                pr_notice("device_version=19\n");
+        } else if (strstr(saved_command_line, "android.version=20")) {
+                device_version = DEVICE_VERSION_17427_PVT;
+                pr_notice("device_version=20\n");
+        } else if (strstr(saved_command_line, "android.version=21")) {
+                device_version = DEVICE_VERSION_17427_MP;
+                pr_notice("device_version=21\n");
+        } else if (strstr(saved_command_line, "android.version=33")) { /* Sloan L */
+                device_version = DEVICE_VERSION_SLOANL_EVT1;
+                pr_notice("device_version=33\n");
+        } else if (strstr(saved_command_line, "android.version=34")) {
+                device_version = DEVICE_VERSION_SLOANL_EVT2;
+                pr_notice("device_version=34\n");
+        } else if (strstr(saved_command_line, "android.version=35")) {
+                device_version = DEVICE_VERSION_SLOANL_DVT;
+                pr_notice("device_version=35\n");
+        } else if (strstr(saved_command_line, "android.version=36")) {
+                device_version = DEVICE_VERSION_SLOANL_PVT;
+                pr_notice("device_version=36\n");
+        } else if (strstr(saved_command_line, "android.version=37")) {
+                device_version = DEVICE_VERSION_SLOANL_MP;
+                pr_notice("device_version=37\n");
+        } else {
+		device_version = DEVICE_VERSION_UNKNOWN;
+		pr_notice("device_version=0\n");
+	}
+
+/*jowen.li@swdp.system, 2015/04/27. add bootmode */
+	if (strstr(saved_command_line, "androidboot.mode=normal")) {
+		bootmode_flag = MSM_BOOT_MODE_NORMAL;
+		pr_notice("androidboot.mode=normal\n");
+	}
+	else if (strstr(saved_command_line, "androidboot.mode=recovery")) {
+		bootmode_flag = MSM_BOOT_MODE_RECOVERY;
+        	pr_notice("androidboot.mode=recovery\n");		
+	}
+	else if (strstr(saved_command_line, "androidboot.mode=ftmrf")) {
+        	bootmode_flag = MSM_BOOT_MODE_RF;
+        	pr_notice("androidboot.mode=ftmrf\n");		
+	}		
+	else if (strstr(saved_command_line, "androidboot.mode=fastboot")) {
+                bootmode_flag = MSM_BOOT_MODE_FASTBOOT;
+                pr_notice("androidboot.mode=fastboot\n");
+        }
+	else if (strstr(saved_command_line, "androidboot.mode=charge")) {
+                bootmode_flag = MSM_BOOT_MODE_CHARGE;
+                pr_notice("androidboot.mode=charge\n");
+        }
+	else if (strstr(saved_command_line, "androidboot.mode=alarm")) {
+                bootmode_flag = MSM_BOOT_MODE_ALARM;
+                pr_notice("androidboot.mode=alarm\n");
+        }
+	else
+	{	
+        	bootmode_flag = MSM_BOOT_MODE_NORMAL;
+		pr_notice("bootmode no normal mode!\n");
+	}
+	pr_notice("bootmode_flag=%d\n",bootmode_flag);
+
+#endif /* GIGASET_EDIT */
+
 }
 
 /*
@@ -826,8 +929,6 @@ static int __ref kernel_init(void *unused)
 	mark_rodata_ro();
 	system_state = SYSTEM_RUNNING;
 	numa_default_policy();
-
-	flush_delayed_fput();
 
 	if (ramdisk_execute_command) {
 		if (!run_init_process(ramdisk_execute_command))

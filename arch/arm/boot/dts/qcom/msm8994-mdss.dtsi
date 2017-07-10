@@ -74,10 +74,10 @@
 						<5 2 3 11 12 13>,
 						<5 4 5 14 15 16>,
 						<5 6 7 17 18 19>;
-		qcom,mdss-pipe-vig-fixed-mmb =	<2 20 24>,
-						<2 21 25>,
-						<2 22 26>,
-						<2 23 27>;
+		qcom,mdss-pipe-vig-fixed-mmb =	<1 20>,
+						<1 21>,
+						<1 22>,
+						<1 23>;
 
 		/* These Offsets are relative to "mdp_phys + mdp-reg-offset" address */
 		qcom,mdss-pipe-vig-clk-ctrl-offsets = <0x2AC 0 0>,
@@ -90,8 +90,7 @@
 						      <0x2C4 4 8>;
 		qcom,mdss-pipe-dma-clk-ctrl-offsets = <0x2AC 8 12>,
 						      <0x2B4 8 12>;
-		qcom,mdss-pipe-cursor-clk-ctrl-offsets = <0x3A8 16 15>,
-						         <0x3B0 16 15>;
+
 		qcom,mdss-pipe-sw-reset-off = <0x0028>;
 		qcom,mdss-pipe-vig-sw-reset-map = <5 6 7 8>;
 		qcom,mdss-pipe-rgb-sw-reset-map = <9 10 11 12>;
@@ -243,7 +242,12 @@
 			<0xfd828000 0x108>;
 		reg-names = "dsi_ctrl", "dsi_phy", "dsi_phy_regulator", "mmss_misc_phys";
 		gdsc-supply = <&gdsc_mdss>;
-		vdd-supply = <&pm8994_l14>;
+//#ifdef GIGASET_EDIT
+//jowen.li@swdp.system, 2015/02/13 added for oem panel 
+		vdd-supply = <&pm8994_l17>;/*l22 3.3v*/
+//#else	
+//		vdd-supply = <&pm8994_l14>;
+//#endif //GIGASET_EDIT	
 		vddio-supply = <&pm8994_l12>;
 		vdda-supply = <&pm8994_l2>;
 		vcca-supply = <&pm8994_l28>;
@@ -340,8 +344,14 @@
 			qcom,panel-supply-entry@0 {
 				reg = <0>;
 				qcom,supply-name = "vdd";
-				qcom,supply-min-voltage = <1800000>;
-				qcom,supply-max-voltage = <1800000>;
+//#ifdef GIGASET_EDIT
+//jowen.li@swdp.system, 2015/02/13 added for oem panel 	
+				qcom,supply-min-voltage = <2700000>;
+				qcom,supply-max-voltage = <2700000>;
+//#else			
+//				qcom,supply-min-voltage = <1800000>;
+//				qcom,supply-max-voltage = <1800000>;
+//#endif //GIGASET_EDIT
 				qcom,supply-enable-load = <100000>;
 				qcom,supply-disable-load = <100>;
 				qcom,supply-post-on-sleep = <5>;
@@ -359,7 +369,12 @@
 			<0xfd828000 0x108>;
 		reg-names = "dsi_ctrl", "dsi_phy", "dsi_phy_regulator", "mmss_misc_phys";
 		gdsc-supply = <&gdsc_mdss>;
-		vdd-supply = <&pm8994_l14>;
+//#ifdef GIGASET_EDIT
+//jowen.li@swdp.system, 2015/02/13 added for oem panel
+		vdd-supply = <&pm8994_l17>;/*l22 3.3v*/
+//#else	
+//		vdd-supply = <&pm8994_l14>;
+//#endif //GIGASET_EDIT
 		vddio-supply = <&pm8994_l12>;
 		vdda-supply = <&pm8994_l2>;
 		vcca-supply = <&pm8994_l28>;
@@ -457,8 +472,14 @@
 			qcom,panel-supply-entry@0 {
 				reg = <0>;
 				qcom,supply-name = "vdd";
-				qcom,supply-min-voltage = <1800000>;
-				qcom,supply-max-voltage = <1800000>;
+//#ifdef GIGASET_EDIT
+//jowen.li@swdp.system, 2015/02/13 added for oem panel
+				qcom,supply-min-voltage = <2700000>;
+				qcom,supply-max-voltage = <2700000>;
+//#else				
+//				qcom,supply-min-voltage = <1800000>;
+//				qcom,supply-max-voltage = <1800000>;
+//#endif //GIGASET_EDIT 				
 				qcom,supply-enable-load = <100000>;
 				qcom,supply-disable-load = <100>;
 				qcom,supply-post-on-sleep = <5>;

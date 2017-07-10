@@ -53,7 +53,13 @@ obj-$(CONFIG_TOUCHSCREEN_PIXCIR)	+= pixcir_i2c_ts.o
 obj-$(CONFIG_TOUCHSCREEN_S3C2410)	+= s3c2410_ts.o
 obj-$(CONFIG_TOUCHSCREEN_ST1232)	+= st1232.o
 obj-$(CONFIG_TOUCHSCREEN_STMPE)		+= stmpe-ts.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_v21) += synaptics_dsx/
+# ifdef GIGASET_EDIT
+# jowen.li@swdp.system, 2015/05/05 update new ctp driver
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_v21) += synaptics_dsx/
+# else
+obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX) += synaptics_dsx/
+obj-y += shtsc/
+# endif
 obj-$(CONFIG_TOUCHSCREEN_TI_AM335X_TSC)	+= ti_am335x_tsc.o
 obj-$(CONFIG_TOUCHSCREEN_TNETV107X)	+= tnetv107x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_TOUCHIT213)	+= touchit213.o
@@ -70,29 +76,26 @@ obj-$(CONFIG_TOUCHSCREEN_WM97XX)	+= wm97xx-ts.o
 wm97xx-ts-$(CONFIG_TOUCHSCREEN_WM9705)	+= wm9705.o
 wm97xx-ts-$(CONFIG_TOUCHSCREEN_WM9712)	+= wm9712.o
 wm97xx-ts-$(CONFIG_TOUCHSCREEN_WM9713)	+= wm9713.o
-
-#ifdef VENDOR_EDIT /* LiuPing@Phone.BSP.Sensor, 2014/10/11, add for tp. */
-#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S3508_I2C_RMI) += synaptics_dsx_i2c.o
-#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S1302_I2C_RMI) += synaptics_dsx_fw_update.o
-#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S3508_I2C_RMI) += synaptics_dsx_rmi_dev.o
-#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S1302_I2C_RMI) += synaptics_dsx_s1302.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S3320_I2C_RMI) += synaptics_driver_s3320.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S3320_I2C_RMI) += synaptics_s3320_redremote.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S1302_I2C_RMI) += synaptics_driver_s1302.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_S1302_I2C_RMI) += synaptics_s1302_redremote.o
-#endif /*VENDOR_EDIT*/
-
 obj-$(CONFIG_TOUCHSCREEN_WM97XX_ATMEL)	+= atmel-wm97xx.o
 obj-$(CONFIG_TOUCHSCREEN_WM97XX_MAINSTONE)	+= mainstone-wm97xx.o
 obj-$(CONFIG_TOUCHSCREEN_WM97XX_ZYLONITE)	+= zylonite-wm97xx.o
 obj-$(CONFIG_TOUCHSCREEN_W90X900)	+= w90p910_ts.o
 obj-$(CONFIG_TOUCHSCREEN_TPS6507X)	+= tps6507x-ts.o
 obj-$(CONFIG_TOUCHSCREEN_FT5X06)	+= ft5x06_ts.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI4_DEV)	+= synaptics_rmi_dev.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE) 	+= synaptics_fw_update.o
-obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)		+= synaptics_i2c_rmi4.o
+obj-$(CONFIG_TOUCHSCREEN_MSTAR21XX)	+= msg21xx_ts.o
+
+# ifndef GIGASET_EDIT
+# jowen.li@swdp.system, 2015/05/05 update new ctp driver
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_RMI4_DEV)	+= synaptics_rmi_dev.o
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE) 	+= synaptics_fw_update.o
+#obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_I2C_RMI4)		+= synaptics_i2c_rmi4.o
+# endif
+
+#ifdef GIGASET_EDIT //jerry li  Drv. 2015_10_10 
+obj-y += touch_common.o
+#fw-shipped-y += LR388K5_f130C_p130E_151102_ext_h.bin
+#endif //GIGASET_EDIT 10_10_
+
 obj-$(CONFIG_TOUCHSCREEN_GT9XX)		+= gt9xx/
 obj-$(CONFIG_TOUCHSCREEN_BU21150)	+= bu21150.o
 obj-$(CONFIG_INPUT_MT_WRAPPER)		+= input_mt_wrapper.o
-
-include drivers/input/touchscreen/touchopt.mk

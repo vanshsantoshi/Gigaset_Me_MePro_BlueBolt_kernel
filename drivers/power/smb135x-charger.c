@@ -3436,7 +3436,7 @@ static int determine_initial_status(struct smb135x_chg *chip)
 	}
 
 	chip->usb_slave_present = is_usb_slave_present(chip);
-	if (chip->usb_psy && !chip->id_line_not_connected) {
+	if (chip->usb_psy) {
 		pr_debug("setting usb psy usb_otg = %d\n",
 				chip->usb_slave_present);
 		power_supply_set_usb_otg(chip->usb_psy,

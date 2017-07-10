@@ -44,6 +44,17 @@ static struct dsi_drv_cm_data shared_ctrl_data;
 static int mdss_dsi_pinctrl_set_state(struct mdss_dsi_ctrl_pdata *ctrl_pdata,
 					bool active);
 
+enum {
+HX8379A_FWVGA=0,
+JDI_1080P_VID,
+JDI_1080P_CMD_17421,
+JDI_1080P_CMD_17427,
+SHARP_1080P_VDO_17421,
+LCM_ID_UNKNOWN,
+};
+
+bool my_gesture_sync_flag=false;
+
 static int mdss_dsi_labibb_vreg_init(struct platform_device *pdev)
 {
 	struct mdss_dsi_ctrl_pdata *ctrl = NULL;
@@ -81,7 +92,6 @@ static int mdss_dsi_labibb_vreg_init(struct platform_device *pdev)
 	return 0;
 }
 
-extern int syna_use_gesture;
 static int mdss_dsi_labibb_vreg_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 							int enable)
 {
@@ -106,23 +116,20 @@ static int mdss_dsi_labibb_vreg_ctrl(struct mdss_dsi_ctrl_pdata *ctrl,
 			regulator_disable(ctrl->lab);
 			return rc;
 		}
-		msleep(20);
 
 	} else {
-	    if (!syna_use_gesture){
-    		rc = regulator_disable(ctrl->lab);
-    		if (rc) {
-    			pr_err("%s: disable failed for lab regulator\n",
-    							__func__);
-    			return rc;
-    		}
+		rc = regulator_disable(ctrl->lab);
+		if (rc) {
+			pr_err("%s: disable failed for lab regulator\n",
+							__func__);
+			return rc;
+		}
 
     		rc = regulator_disable(ctrl->ibb);
     		if (rc) {
     			pr_err("%s: disable failed for ibb regulator\n",
     							__func__);
     			return rc;
-    		}
         }
 	}
 
@@ -160,17 +167,12 @@ static int mdss_dsi_regulator_init(struct platform_device *pdev)
 
 	return rc;
 }
-#ifdef VENDOR_EDIT
-extern int vendor_lcd_power_on(struct mdss_panel_data *pdata, int enable);
-#endif
 
 static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 {
 	int ret = 0;
 	struct mdss_dsi_ctrl_pdata *ctrl_pdata = NULL;
 	int i = 0;
-
-  //  pr_err("%s\n",__func__); //for debug
 
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -192,13 +194,7 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 	}
 #endif
 
-#ifdef VENDOR_EDIT
 
-	if (ctrl_pdata->use_external_ic_power){
-		
-			vendor_lcd_power_on(pdata, 0);
-		}
-#endif
 
 	ret = mdss_dsi_panel_reset(pdata, 0);
 	if (ret) {
@@ -278,15 +274,7 @@ static int mdss_dsi_panel_power_on(struct mdss_panel_data *pdata)
 
 	i--;
 
-#ifdef VENDOR_EDIT  //gzm@oem add 2015-07-04 for EVT2 DVT PVT
-	if (!pdata->panel_info.cont_splash_enabled) 
-		{
-	if (ctrl_pdata->use_external_ic_power){
-		
-			vendor_lcd_power_on(pdata, 1);
-		}
-		}
-#endif
+
 
 	/*
 	 * If continuous splash screen feature is enabled, then we need to
@@ -824,19 +812,8 @@ int mdss_dsi_on(struct mdss_panel_data *pdata)
 	if (mipi->lp11_init) {
 		if (mdss_dsi_pinctrl_set_state(ctrl_pdata, true))
 			pr_debug("reset enable: pinctrl not enabled\n");
-		#ifdef VENDOR_EDIT
-		if (syna_use_gesture)
-			msleep(25);
-		else
-			msleep(12);
 		mdss_dsi_panel_reset(pdata, 1);
-		if (syna_use_gesture)
-			msleep(30);
-		#else
-		mdss_dsi_panel_reset(pdata, 1);
-		#endif
 	}
-
 
 	if (mipi->init_delay)
 		usleep(mipi->init_delay);
@@ -1624,6 +1601,43 @@ static int mdss_dsi_event_handler(struct mdss_panel_data *pdata,
 	return rc;
 }
 
+
+int my_panel_id=0;
+
+int get_panel_id(void)
+{
+	char *p_sub;
+	p_sub=strstr(saved_command_line, "dsi");
+
+	if(p_sub)
+	{
+		pr_err("[lwj] %s",p_sub+11);
+		if (strstr(p_sub, "mdss_dsi_hx8379a_truly_fwvga_video")) {
+			my_panel_id=HX8379A_FWVGA;//0;
+		}
+		else if(strstr(p_sub, "mdss_dsi_jdi_1080p_video")) {
+			my_panel_id=JDI_1080P_VID;//1;
+		}
+		else if(strstr(p_sub, "mdss_dsi_jdi_1080p_cmd_17421")) {
+			my_panel_id=JDI_1080P_CMD_17421;//2;
+		}
+		else if(strstr(p_sub, "mdss_dsi_jdi_1080p_cmd_17427")) {
+			my_panel_id=JDI_1080P_CMD_17427;//3;
+		}
+		else if(strstr(p_sub, "mdss_dsi_sharp_1080p_vdo_17421")){
+			my_panel_id=SHARP_1080P_VDO_17421;//4;
+		}
+		else
+			my_panel_id=LCM_ID_UNKNOWN;//0;	
+	}	
+	else
+		my_panel_id=LCM_ID_UNKNOWN;//0;	
+
+	printk("\n[lwj]--%s--my_panel_id=%d\n",__func__,my_panel_id);
+
+	return my_panel_id;
+}
+
 static int mdss_dsi_set_override_cfg(char *override_cfg,
 		struct mdss_dsi_ctrl_pdata *ctrl_pdata, char *panel_cfg)
 {
@@ -1665,6 +1679,8 @@ static struct device_node *mdss_dsi_pref_prim_panel(
 
 	return dsi_pan_node;
 }
+
+
 
 /**
  * mdss_dsi_find_panel_of_node(): find device node of dsi panel
