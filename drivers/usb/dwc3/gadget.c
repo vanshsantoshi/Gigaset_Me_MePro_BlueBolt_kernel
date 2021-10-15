@@ -385,6 +385,7 @@ int dwc3_send_gadget_generic_command(struct dwc3 *dwc, int cmd, u32 param)
 {
 	u32		timeout = 500;
 	u32		reg;
+	int ret;
 
 	dwc3_writel(dwc->regs, DWC3_DGCMDPAR, param);
 	dwc3_writel(dwc->regs, DWC3_DGCMD, cmd | DWC3_DGCMD_CMDACT);
@@ -394,9 +395,10 @@ int dwc3_send_gadget_generic_command(struct dwc3 *dwc, int cmd, u32 param)
 		if (!(reg & DWC3_DGCMD_CMDACT)) {
 			dev_vdbg(dwc->dev, "Command Complete --> %d\n",
 					DWC3_DGCMD_STATUS(reg));
+			ret = 0;
 			if (DWC3_DGCMD_STATUS(reg))
-				return -EINVAL;
-			return 0;
+				ret = -EINVAL;
+			break;
 		}
 
 		/*
@@ -404,10 +406,14 @@ int dwc3_send_gadget_generic_command(struct dwc3 *dwc, int cmd, u32 param)
 		 * interrupt context.
 		 */
 		timeout--;
-		if (!timeout)
-			return -ETIMEDOUT;
+		if (!timeout) {
+			ret = -ETIMEDOUT;
+			break;
+		}
 		udelay(1);
 	} while (1);
+
+	return ret;
 }
 
 int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
@@ -441,6 +447,8 @@ int dwc3_send_gadget_ep_cmd(struct dwc3 *dwc, unsigned ep,
 			 */
 			if (reg & 0x2000)
 				ret = -EAGAIN;
+			else if (DWC3_DEPCMD_STATUS(reg))
+				ret = -EINVAL;
 			else
 				ret = 0;
 			break;
@@ -2975,9 +2983,7 @@ void dwc3_gadget_usb3_phy_suspend(struct dwc3 *dwc, int suspend)
 static void dwc3_gadget_reset_interrupt(struct dwc3 *dwc)
 {
 	u32			reg;
-#ifndef VENDOR_EDIT
 	struct dwc3_otg		*dotg = dwc->dotg;
-#endif
 
 	dev_vdbg(dwc->dev, "%s\n", __func__);
 
@@ -3022,10 +3028,8 @@ static void dwc3_gadget_reset_interrupt(struct dwc3 *dwc)
 
 	dwc3_gadget_usb3_phy_suspend(dwc, false);
 
-#ifndef VENDOR_EDIT
 	if (dotg && dotg->otg.phy)
 		usb_phy_set_power(dotg->otg.phy, 0);
-#endif
 
 	if (dwc->gadget.speed != USB_SPEED_UNKNOWN)
 		dwc3_disconnect_gadget(dwc);

@@ -286,7 +286,6 @@ struct qpnp_hap {
 	struct mutex lock;
 	struct mutex wf_lock;
 	struct mutex set_lock;
-	struct workqueue_struct *wq;
 	spinlock_t td_lock;
 	struct work_struct td_work;
 	struct completion completion;
@@ -317,7 +316,6 @@ struct qpnp_hap {
 	u8 reg_play;
 	u8 lra_res_cal_period;
 	u8 ext_pwm_dtest_line;
-
 	bool state;
 	bool use_play_irq;
 	bool use_sc_irq;
@@ -332,9 +330,6 @@ struct qpnp_hap {
 };
 
 static struct qpnp_hap *ghap;
-
-static int disable_haptics_refcnt;
-static DEFINE_SPINLOCK(disable_lock);
 
 /* helper to read a pmic register */
 static int qpnp_hap_read_reg(struct qpnp_hap *hap, u8 *data, u16 addr)
@@ -1567,6 +1562,7 @@ static int qpnp_hap_set(struct qpnp_hap *hap, int on)
 					mutex_unlock(&hap->set_lock);
 					return rc;
 				}
+
 				/*
 				 * Start timer to poll Auto Resonance error bit
 				 */
@@ -1602,30 +1598,6 @@ static int qpnp_hap_set(struct qpnp_hap *hap, int on)
 	return rc;
 }
 
-void qpnp_disable_haptics(bool disable)
-{
-	unsigned long flags;
-
-	spin_lock_irqsave(&disable_lock, flags);
-	if (disable)
-		disable_haptics_refcnt++;
-	else if (disable_haptics_refcnt > 0)
-		disable_haptics_refcnt--;
-	spin_unlock_irqrestore(&disable_lock, flags);
-}
-
-static bool is_haptics_disabled(void)
-{
-	unsigned long flags;
-	bool disable;
-
-	spin_lock_irqsave(&disable_lock, flags);
-	disable = disable_haptics_refcnt;
-	spin_unlock_irqrestore(&disable_lock, flags);
-
-	return disable;
-}
-
 static void qpnp_timed_enable_worker(struct work_struct *work)
 {
 	struct qpnp_hap *hap = container_of(work, struct qpnp_hap,
@@ -1640,9 +1612,6 @@ static void qpnp_timed_enable_worker(struct work_struct *work)
 	if (!value && !hap->state)
 		return;
 
-	if (value && is_haptics_disabled())
-		return;
-
 	flush_work(&hap->work);
 
 	mutex_lock(&hap->lock);
@@ -1655,8 +1624,6 @@ static void qpnp_timed_enable_worker(struct work_struct *work)
 		}
 		hap->state = 0;
 	} else {
-		if (value < 50)
-			value += 29;
 		value = (value > hap->timeout_ms ?
 				 hap->timeout_ms : value);
 		hap->state = 1;
@@ -1678,24 +1645,12 @@ static void qpnp_hap_td_enable(struct timed_output_dev *dev, int value)
 {
 	struct qpnp_hap *hap = container_of(dev, struct qpnp_hap,
 					 timed_dev);
-	int prev_value;
+
 	spin_lock(&hap->td_lock);
-	prev_value = hap->td_value;
 	hap->td_value = value;
 	spin_unlock(&hap->td_lock);
-			/*
-		 * Fingerprint success haptic duration in the Android framework is
-		 * 30ms. After writing the 30ms value, the Android framework performs a
-		 * shoddy delay and writes 0ms to manually disable the haptic response.
-		 * This shoddy delay results in an inconsistent, <30ms haptic response
-		 * on fingerprint authentication, so ignore the request to manually
-		 * disable the 30ms haptics.
-		 */
-	if (!value && prev_value == 30)
-		return;
 
-
-	queue_work(hap->wq, &hap->td_work);
+	schedule_work(&hap->td_work);
 }
 
 /* play pwm bytes */
@@ -2343,16 +2298,11 @@ static int qpnp_haptic_probe(struct spmi_device *spmi)
 		dev_err(&spmi->dev, "hap config failed\n");
 		return rc;
 	}
-	hap->wq = alloc_workqueue("qpnp_haptics", WQ_HIGHPRI, 0);
-		if (!hap->wq) {
-			dev_err(&spmi->dev, "Failed to allocate workqueue\n");
-			return rc;
-	}
+
 	mutex_init(&hap->lock);
 	mutex_init(&hap->wf_lock);
 	mutex_init(&hap->set_lock);
 	spin_lock_init(&hap->td_lock);
-
 	INIT_WORK(&hap->work, qpnp_hap_worker);
 	init_completion(&hap->completion);
 	INIT_WORK(&hap->td_work, qpnp_timed_enable_worker);

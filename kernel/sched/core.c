@@ -1686,21 +1686,6 @@ static void update_history(struct rq *rq, struct task_struct *p,
 	if (!runtime || is_idle_task(p) || exiting_task(p) || !samples)
 			goto done;
 
-#ifdef VENDOR_EDIT
-	if (p->ravg.mitigated) {
-		/* update history accroding to previous records
-		 * e.g. 60% loading in big cluster becomes 60% in smallest one
-		 */
-		for (ridx = 0; ridx < sched_ravg_hist_size; ridx++) {
-			hist[ridx] = div64_u64((u64)hist[ridx] * 1024
-					, (u64)max_load_scale_factor);
-			sum += hist[ridx];
-			if (hist[ridx] > max)
-				max = hist[ridx];
-		}
-		goto update_demand;
-	}
-#endif
 	/* Push new 'runtime' value onto stack */
 	widx = sched_ravg_hist_size - 1;
 	ridx = widx - samples;
@@ -1718,9 +1703,6 @@ static void update_history(struct rq *rq, struct task_struct *p,
 			max = hist[widx];
 	}
 
-#ifdef VENDOR_EDIT
-update_demand:
-#endif
 	p->ravg.sum = 0;
 	if (p->on_rq)
 		p->sched_class->dec_hmp_sched_stats(rq, p);
@@ -1813,11 +1795,7 @@ static void update_task_demand(struct task_struct *p, struct rq *rq,
 	u32 window_size = sched_ravg_window;
 
 	new_window = mark_start < window_start;
-#ifdef VENDOR_EDIT
-	if (!account_busy_for_task_demand(p, event) || p->ravg.mitigated) {
-#else
 	if (!account_busy_for_task_demand(p, event)) {
-#endif
 		if (new_window)
 			/* If the time accounted isn't being accounted as
 			 * busy time, and a new window started, only the
@@ -1826,13 +1804,6 @@ static void update_task_demand(struct task_struct *p, struct rq *rq,
 			 * elapsed, but since empty windows are dropped,
 			 * it is not necessary to account those. */
 			update_history(rq, p, p->ravg.sum, 1, event);
-#ifdef VENDOR_EDIT
-		if (p->ravg.mitigated) {
-			/* force update history */
-			update_history(rq, p, 1, RAVG_HIST_SIZE_MAX, event);
-			p->ravg.mitigated = 0;
-		}
-#endif
 		return;
 	}
 
@@ -3102,17 +3073,12 @@ ttwu_do_wakeup(struct rq *rq, struct task_struct *p, int wake_flags)
 static void
 ttwu_do_activate(struct rq *rq, struct task_struct *p, int wake_flags)
 {
-	int en_flags = ENQUEUE_WAKEUP;
-
 #ifdef CONFIG_SMP
 	if (p->sched_contributes_to_load)
 		rq->nr_uninterruptible--;
-
-	if (wake_flags & WF_MIGRATED)
-		en_flags |= ENQUEUE_MIGRATED;
 #endif
 
-	ttwu_activate(rq, p, en_flags);
+	ttwu_activate(rq, p, ENQUEUE_WAKEUP | ENQUEUE_WAKING);
 	ttwu_do_wakeup(rq, p, wake_flags);
 }
 
@@ -3149,11 +3115,7 @@ static void sched_ttwu_pending(void)
 	while (llist) {
 		p = llist_entry(llist, struct task_struct, wake_entry);
 		llist = llist_next(llist);
-		/*
-		 * See ttwu_queue(); we only call ttwu_queue_remote() when
-		 * its a x-cpu wakeup.
-		 */
-		ttwu_do_activate(rq, p, WF_MIGRATED);
+		ttwu_do_activate(rq, p, 0);
 	}
 
 	raw_spin_unlock(&rq->lock);
@@ -3217,7 +3179,7 @@ bool cpus_share_cache(int this_cpu, int that_cpu)
 }
 #endif /* CONFIG_SMP */
 
-static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
+static void ttwu_queue(struct task_struct *p, int cpu)
 {
 	struct rq *rq = cpu_rq(cpu);
 
@@ -3230,7 +3192,7 @@ static void ttwu_queue(struct task_struct *p, int cpu, int wake_flags)
 #endif
 
 	raw_spin_lock(&rq->lock);
-	ttwu_do_activate(rq, p, wake_flags);
+	ttwu_do_activate(rq, p, 0);
 	raw_spin_unlock(&rq->lock);
 }
 
@@ -3348,6 +3310,9 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 	p->sched_contributes_to_load = !!task_contributes_to_load(p);
 	p->state = TASK_WAKING;
 
+	if (p->sched_class->task_waking)
+		p->sched_class->task_waking(p);
+
 	cpu = select_task_rq(p, SD_BALANCE_WAKE, wake_flags);
 
 	/* Refresh src_cpu as it could have changed since we last read it */
@@ -3360,7 +3325,7 @@ try_to_wake_up(struct task_struct *p, unsigned int state, int wake_flags)
 	}
 #endif /* CONFIG_SMP */
 
-	ttwu_queue(p, cpu, wake_flags);
+	ttwu_queue(p, cpu);
 stat:
 	ttwu_stat(p, cpu, wake_flags);
 
@@ -4059,13 +4024,10 @@ static long calc_load_fold_active(struct rq *this_rq)
 static unsigned long
 calc_load(unsigned long load, unsigned long exp, unsigned long active)
 {
-	unsigned long newload;
-
-	newload = load * exp + active * (FIXED_1 - exp);
-	if (active >= load)
-		newload += FIXED_1-1;
-
-	return newload / FIXED_1;
+	load *= exp;
+	load += active * (FIXED_1 - exp);
+	load += 1UL << (FSHIFT - 1);
+	return load >> FSHIFT;
 }
 
 #ifdef CONFIG_NO_HZ_COMMON
@@ -6239,7 +6201,7 @@ static int sched_read_attr(struct sched_attr __user *uattr,
 		attr->size = usize;
 	}
 
-	ret = copy_to_user(uattr, attr, usize);
+	ret = copy_to_user(uattr, attr, attr->size);
 	if (ret)
 		return -EFAULT;
 
@@ -6658,34 +6620,23 @@ EXPORT_SYMBOL_GPL(yield_to);
  * This task is about to go to sleep on IO. Increment rq->nr_iowait so
  * that process accounting knows that this is a task in IO wait state.
  */
-void __sched io_schedule(void)
-{
-	struct rq *rq = raw_rq();
-
-	delayacct_blkio_start();
-	atomic_inc(&rq->nr_iowait);
-	blk_flush_plug(current);
-	current->in_iowait = 1;
-	schedule();
-	current->in_iowait = 0;
-	atomic_dec(&rq->nr_iowait);
-	delayacct_blkio_end();
-}
-EXPORT_SYMBOL(io_schedule);
-
 long __sched io_schedule_timeout(long timeout)
 {
-	struct rq *rq = raw_rq();
+	int old_iowait = current->in_iowait;
+	struct rq *rq;
 	long ret;
 
-	delayacct_blkio_start();
-	atomic_inc(&rq->nr_iowait);
-	blk_flush_plug(current);
 	current->in_iowait = 1;
+	blk_schedule_flush_plug(current);
+
+	delayacct_blkio_start();
+	rq = raw_rq();
+	atomic_inc(&rq->nr_iowait);
 	ret = schedule_timeout(timeout);
-	current->in_iowait = 0;
+	current->in_iowait = old_iowait;
 	atomic_dec(&rq->nr_iowait);
 	delayacct_blkio_end();
+
 	return ret;
 }
 EXPORT_SYMBOL(io_schedule_timeout);
@@ -6844,7 +6795,7 @@ void show_state_filter(unsigned long state_filter)
 
 	touch_all_softlockup_watchdogs();
 
-#ifdef CONFIG_SCHED_DEBUG
+#ifdef CONFIG_SYSRQ_SCHED_DEBUG
 	if (!state_filter)
 		sysrq_sched_debug_show();
 #endif
@@ -10096,11 +10047,6 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 	if (period > max_cfs_quota_period)
 		return -EINVAL;
 
-	/*
-	 * Prevent race between setting of cfs_rq->runtime_enabled and
-	 * unthrottle_offline_cfs_rqs().
-	 */
-	get_online_cpus();
 	mutex_lock(&cfs_constraints_mutex);
 	ret = __cfs_schedulable(tg, period, quota);
 	if (ret)
@@ -10122,11 +10068,12 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 	/* restart the period timer (if active) to handle new period expiry */
 	if (runtime_enabled && cfs_b->timer_active) {
 		/* force a reprogram */
-		__start_cfs_bandwidth(cfs_b, true);
+		cfs_b->timer_active = 0;
+		__start_cfs_bandwidth(cfs_b);
 	}
 	raw_spin_unlock_irq(&cfs_b->lock);
 
-	for_each_online_cpu(i) {
+	for_each_possible_cpu(i) {
 		struct cfs_rq *cfs_rq = tg->cfs_rq[i];
 		struct rq *rq = cfs_rq->rq;
 
@@ -10142,38 +10089,9 @@ static int tg_set_cfs_bandwidth(struct task_group *tg, u64 period, u64 quota)
 		cfs_bandwidth_usage_dec();
 out_unlock:
 	mutex_unlock(&cfs_constraints_mutex);
-	put_online_cpus();
 
 	return ret;
 }
-
-#ifdef VENDOR_EDIT
-int tg_set_cfs_quota_per_task(struct task_group *tg, long cfs_quota_us)
-{
-	struct cfs_bandwidth *cfs_b = &tg->cfs_bandwidth;
-	u64 quota, period;
-
-	period = ktime_to_ns(tg->cfs_bandwidth.period);
-	quota = tg->cfs_bandwidth.quota;
-
-	raw_spin_lock_irq(&cfs_b->lock);
-	if (cfs_quota_us > 0)
-		cfs_b->quota_per_task = (u64)cfs_quota_us * NSEC_PER_USEC;
-	raw_spin_unlock_irq(&cfs_b->lock);
-
-	return tg_set_cfs_bandwidth(tg, period, quota);
-}
-
-long tg_get_cfs_quota_per_task(struct task_group *tg)
-{
-	u64 quota_us;
-
-	quota_us = tg->cfs_bandwidth.quota_per_task;
-	do_div(quota_us, NSEC_PER_USEC);
-
-	return quota_us;
-}
-#endif
 
 int tg_set_cfs_quota(struct task_group *tg, long cfs_quota_us)
 {
@@ -10220,19 +10138,6 @@ long tg_get_cfs_period(struct task_group *tg)
 
 	return cfs_period_us;
 }
-
-#ifdef VENDOR_EDIT
-static s64 cpu_cfs_quota_per_task_read_s64(struct cgroup *cgrp, struct cftype *cft)
-{
-	return tg_get_cfs_quota_per_task(cgroup_tg(cgrp));
-}
-
-static int cpu_cfs_quota_per_task_write_s64(struct cgroup *cgrp, struct cftype *cftype,
-				s64 cfs_quota_us)
-{
-	return tg_set_cfs_quota_per_task(cgroup_tg(cgrp), cfs_quota_us);
-}
-#endif
 
 static s64 cpu_cfs_quota_read_s64(struct cgroup *cgrp, struct cftype *cft)
 {
@@ -10394,13 +10299,6 @@ static struct cftype cpu_files[] = {
 	},
 #endif
 #ifdef CONFIG_CFS_BANDWIDTH
-#ifdef VENDOR_EDIT
-	{
-		.name = "cfs_quota_us_per_task",
-		.read_s64 = cpu_cfs_quota_per_task_read_s64,
-		.write_s64 = cpu_cfs_quota_per_task_write_s64,
-	},
-#endif
 	{
 		.name = "cfs_quota_us",
 		.read_s64 = cpu_cfs_quota_read_s64,

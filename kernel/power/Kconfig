@@ -26,13 +26,6 @@ config WAKELOCK
 	bool
 	default y
 
-config POWERSUSPEND
-	bool "Power suspend"
-	default y
-	---help---
-	  Call early suspend handlers when the user requested sleep state
-	  changes.
-
 config HIBERNATE_CALLBACKS
 	bool
 
@@ -296,11 +289,7 @@ config SUSPEND_TIME
 	  keeps statistics on the time spent in suspend in
 	  /sys/kernel/debug/suspend_time
 
-config QUICK_WAKEUP
-	bool "Quick wakeup"
+config PM_SYNC_BEFORE_SUSPEND
+	bool "Sync file systems before suspend"
 	depends on SUSPEND
 	default y
-	---help---
-	  Allow kernel driver to do periodic jobs without resuming the full system
-	  This option can increase battery life on android powered smartphone.
-	  

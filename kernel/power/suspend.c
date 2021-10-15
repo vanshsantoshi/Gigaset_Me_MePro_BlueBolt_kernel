@@ -47,10 +47,6 @@ static bool need_suspend_ops(suspend_state_t state)
 static DECLARE_WAIT_QUEUE_HEAD(suspend_freeze_wait_head);
 static bool suspend_freeze_wake;
 
-#ifdef 	VENDOR_EDIT
-extern void thaw_fingerprintd(void);
-#endif
-
 static void freeze_begin(void)
 {
 	suspend_freeze_wake = false;
@@ -172,10 +168,6 @@ void __attribute__ ((weak)) arch_suspend_enable_irqs(void)
  *
  * This function should be called after devices have been suspended.
  */
-#ifdef VENDOR_EDIT
-extern void regulator_suspend_dump(void);
-extern void pinctrl_suspend_dump(void);
-#endif /* VENDOR_EDIT */
 static int suspend_enter(suspend_state_t state, bool *wakeup)
 {
 	char suspend_abort[MAX_SUSPEND_ABORT_LEN];
@@ -230,10 +222,6 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
 	if (!error) {
 		*wakeup = pm_wakeup_pending();
 		if (!(suspend_test(TEST_CORE) || *wakeup)) {
-#ifdef VENDOR_EDIT
-			regulator_suspend_dump();
-			pinctrl_suspend_dump();
-#endif /* VENDOR_EDIT */
 			error = suspend_ops->enter(state);
 			events_check_enabled = false;
 		} else if (*wakeup) {
@@ -254,10 +242,6 @@ static int suspend_enter(suspend_state_t state, bool *wakeup)
  Platform_wake:
 	if (need_suspend_ops(state) && suspend_ops->wake)
 		suspend_ops->wake();
-
-#ifdef VENDOR_EDIT
-	thaw_fingerprintd();
-#endif
 
 	dpm_resume_start(PMSG_RESUME);
 
@@ -363,6 +347,12 @@ static int enter_state(suspend_state_t state)
 
 	if (state == PM_SUSPEND_FREEZE)
 		freeze_begin();
+
+#ifdef CONFIG_PM_SYNC_BEFORE_SUSPEND
+	printk(KERN_INFO "PM: Syncing filesystems ... ");
+	sys_sync();
+	printk("done.\n");
+#endif
 
 	pr_debug("PM: Preparing system for %s sleep\n", pm_states[state].label);
 	error = suspend_prepare(state);
